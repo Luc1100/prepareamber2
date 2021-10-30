@@ -1,6 +1,7 @@
 # from openmm.app import *
 # from openmm import *
 # from openmm.unit import *
+# this is a comment
 from pdbfixer import *
 
 
