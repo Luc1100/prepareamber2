@@ -1,21 +1,24 @@
 import argparse
 from pdbfixer import PDBFixer
-import pdb_util as util
 import os
 
 
 def fix_pdb(structures):
-    for strucutre in structures:
+    for structure in structures:
         if 'pdb' in os.path.splitext(structure)[-1]:
-            #the "structure" string in the args.structure list will be updated so
-            #that it corresponds to the PDB we should use for subsequent steps
-            assert os.path.isfile(pdb),'%s does not exist\n' % structure
+            # the "structure" string in the args.structure list will be updated so
+            # that it corresponds to the PDB we should use for subsequent steps
+            assert os.path.isfile(structure),'%s does not exist\n' % structure
 
-            #use pdbfixer to find anything wrong with initial pdb(s)
+            # use pdbfixer to find anything wrong with initial pdb(s)
             fixer = PDBFixer(filename=structure)
+            # find missing residues, atoms
             fixer.findMissingResidues()
-            print(fixer.missingResidues)
+            fixer.findMissingAtoms()
+            # add missing residues and atoms
+            print('Adding missing residues and atoms...')
             fixer.addMissingAtoms()
+            # TODO: deal with nonstandard residues
         
 
 def main():
