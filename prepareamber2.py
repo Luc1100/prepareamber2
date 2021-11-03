@@ -19,6 +19,9 @@ def fix_pdb(structures):
             print('Adding missing residues and atoms...')
             fixer.addMissingAtoms()
             # TODO: deal with nonstandard residues
+            fixer.findNonstandardResidues()
+            print(fixer.nonstandardResidues)
+
         
 
 def main():
