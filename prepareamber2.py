@@ -69,8 +69,8 @@ def parm_complex(prot, lig, ff, wm):
 def solvate(modeller, ff):
     boxSize, padding, boxVectors = None, None, None
     geompadding = float(6) * unit.nanometer
-    maxSize = max(max((pos[i] for pos in modeller.getPositions()))-min((pos[i] for pos in modeller.getPositions())) for i in range(3))
-    vectors = openmm.Vec3(1,0,0), openmm.Vec3(1/3,2*sqrt(2)/3,0), openmm.Vec3(-1/3,sqrt(2)/3,sqrt(6)/3)
+    maxSize = max(max((pos[i] for pos in modeller.getPositions())) - min((pos[i] for pos in modeller.getPositions())) for i in range(3))
+    vectors = openmm.Vec3(1, 0, 0), openmm.Vec3(1/3, 2*sqrt(2)/3, 0), openmm.Vec3(-1/3, sqrt(2)/3, sqrt(6)/3)
     boxVectors = [(maxSize+geompadding)*v for v in vectors]
     modeller.addSolvent(ff, model='tip3p', boxVectors=boxVectors)
     return modeller
@@ -78,39 +78,22 @@ def solvate(modeller, ff):
 
 def assert_watermodel(wm):
     assert wm in ['tip3p', 'tip3pfb', 'tip4pew', 'tip4pfb', 'spce'], 'Unknown water model %s\n' % wm
-    if wm == 'tip3p':
-        wm = 'amber14/tip3p.xml'
-    elif wm == 'tip3pfb':
-        wm = 'amber14/tip3pfb.xml'
-    elif wm == 'tip4pew':
-        wm = 'amber14/tip4pew.xml'
-    elif wm == 'tip4pfb':
-        wm = 'amber14/tip4pfb.xml'
-    elif wm == 'spce':
-        wm = 'amber14/spce.xml'
+    wm = 'amber14/%s.xml' % wm
     return wm
 
 
 def assert_forcefield(ff):
     assert ff in ['ff14SB', 'ff15ipq'], 'Unknown forcefield %s\n' % ff
-    if ff == 'ff14SB':
-        ff = 'amber14/protein.ff14SB.xml'
-    elif ff == 'ff15ipq':
-        ff = 'amber14/protein.ff15ipq.xml'
+    ff = 'amber14/protein%s.xml' % ff
     return ff
 
 
-def assert_extraforcefield(ff):
-    assert ff in ['DNA.OL15', 'DNA.bsc1', 'RNA.OL3', 'lipid17', ''], 'Unknown extra forcefield %s\n' % ff
-    if ff == 'DNA.OL15':
-        ff= 'amber14/DNA.OL15.xml'
-    elif ff == 'DNA.bsc1':
-        ff = 'amber14/DNA.bsc1.xml'
-    elif ff == 'RNA.OL3':
-        ff = 'amber14/RNA.OL3.xml'
-    elif ff == 'lipid17':
-        ff = 'amber14/lipid17.xml'
-    return ff
+def assert_extraforcefield(effs):
+    effs_w_paths = []
+    for ff in effs:
+        assert ff in ['DNA.OL15', 'DNA.bsc1', 'RNA.OL3', 'lipid17', 'GLYCAM_06j-1'], 'Unknown extra forcefield %s\n' % ff
+        effs_w_paths.append('amer14/%s.xml' % ff)
+    return effs_w_paths
 
 
 if __name__ == '__main__':
@@ -135,21 +118,17 @@ if __name__ == '__main__':
     parser.add_argument('-w', '--water_dist', default=12, help='Water box \
     distance; defaults to 12.')
 
-    # TODO: update available water models
     parser.add_argument('-wm', '--water_model', default='tip3p',
-            help='Water model; OPC, SPCE, TIP4P, and TIP3P are available. \
-            Defaults to TIP3P.')
+            help='Water model; tip3p, tip3pfb, tip4pew, tip4pfb, and spce are available. \
+            Defaults to tip3p.')
 
-    # TODO: list available forcefields
     parser.add_argument('-ff', '--force_field', default='ff15ipq',
-            help='Force field; defaults to amber14/protein.ff15ipq.xml.')
+            help='Force field; ff15ipq and ff14SB are available. \
+                Defaults to ff15ipq.')
 
-    parser.add_argument('-eff', '--extra_force_field', default='',
-            help='Extra force fields (e.g. DNA, lipids); defaults to null')
-
-    parser.add_argument('-rns', '--replace_nonstandard', default=False, 
-    action='store_true', help='Replace non-standard residues using PDBFixer; \
-    default is false')
+    parser.add_argument('-eff', '--extra_force_field', nargs='+', default='',
+            help='Extra force fields (e.g. DNA, lipids); DNA.OL15, DNA.bsc1, RNA.OL3, lipid17, and GLYCAM_06j-1 are available. \
+                defaults to null.')
 
     parser.add_argument('-t', '--temperature', default=300, help='Simulation \
     temperature; defaults to 300K.')
@@ -198,11 +177,11 @@ if __name__ == '__main__':
     args.extra_force_field = assert_extraforcefield(args.extra_force_field)
     
     for structure in args.structures:
-        # assert os.path.isfile(structure),'%s does not exist\n' % structure
+        assert os.path.isfile(structure),'%s does not exist\n' % structure
         struct_file_tup = os.path.splitext(structure)
         base = struct_file_tup[0]
         ext = struct_file_tup[1] 
-        fix_pdb(structure, base, True)
+        # fix_pdb(structure, base, True)
         parm_complex(f"{base}_prep.pdb", 'gfp_ligand.sdf', args.force_field, args.water_model)
 
 
